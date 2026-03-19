@@ -1,0 +1,36 @@
+Running 16 checks on your project...
+11/16 checks passed. 5 checks failed. Possible issues detected:
+Use the --verbose flag to see more details about passed checks.
+
+✖ Check for common project setup issues
+The .expo directory is not ignored by Git. It contains machine-specific device history and development server settings and should not be committed.
+Advice:
+Add ".expo/" to your .gitignore to avoid committing local Expo state.
+
+✖ Check dependencies for packages that should not be installed directly
+The package "expo-modules-core" should not be installed directly in your project. You should instead use the exported API from the expo package.
+Advice:
+Remove these packages from your package.json.
+
+✖ Check that required peer dependencies are installed
+Missing peer dependency: expo-constants
+Required by: expo-router
+Missing peer dependency: expo-linking
+Required by: expo-router
+Advice:
+Install missing required peer dependencies with "npx expo install expo-constants expo-linking"
+Your app may crash outside of Expo Go without these dependencies. Native module peer dependencies must be installed directly.
+
+✖ Check that native modules use compatible support package versions for installed Expo SDK
+Expected package @expo/config-plugins@~8.0.0
+Found invalid:
+  @expo/config-plugins@55.0.6
+  (for more info, run: npm why @expo/config-plugins)
+Advice:
+Upgrade dependencies that are using the invalid package versions.
+
+✖ Check for app config fields that may not be synced in a non-CNG project
+This project contains native project folders but also has native configuration properties in app.json, indicating it is configured to use Prebuild. When the android/ios folders are present, if you don't run prebuild in your build pipeline, the following properties will not be synced: orientation, icon, userInterfaceStyle, splash, ios, android, plugins, scheme. 
+
+
+5 checks failed, indicating possible issues with the project.

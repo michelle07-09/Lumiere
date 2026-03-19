@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lumière</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Outfit:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --dark:  #1A1512;
+    --dark2: #231E18;
+    --gold:  #C4955A;
+    --gold2: #E8C88A;
+    --cream: #F7F2EA;
+    --muted: #9A8E80;
+  }
+
+  body {
+    background: var(--dark);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  /* ── SPLASH CONTAINER ─────────────────────────────────────── */
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: var(--dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    overflow: hidden;
+  }
+
+  /* ── NOISE GRAIN OVERLAY ──────────────────────────────────── */
+  #splash::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    pointer-events: none;
+    animation: grain 0.8s steps(2) infinite;
+  }
+  @keyframes grain { 0%{transform:translate(0,0)} 25%{transform:translate(-2%,-3%)} 50%{transform:translate(3%,2%)} 75%{transform:translate(-1%,3%)} 100%{transform:translate(2%,-1%)} }
+
+  /* ── CANVAS for particles ─────────────────────────────────── */
+  #canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    animation: fadeIn 2s 0.5s forwards;
+  }
+
+  /* ── RADIAL GLOW ──────────────────────────────────────────── */
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+  }
+  .glow-1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(196,149,90,0.12) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    animation: glowPulse 4s ease-in-out infinite;
+  }
+  .glow-2 {
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(196,149,90,0.08) 0%, transparent 70%);
+    top: 30%; left: 20%;
+    animation: glowFloat 6s ease-in-out infinite;
+  }
+  .glow-3 {
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(196,149,90,0.06) 0%, transparent 70%);
+    bottom: 25%; right: 15%;
+    animation: glowFloat 7s ease-in-out infinite reverse;
+  }
+  @keyframes glowPulse { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.8} 50%{transform:translate(-50%,-50%) scale(1.15);opacity:1} }
+  @keyframes glowFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
+
+  /* ── DECORATIVE BORDER ────────────────────────────────────── */
+  .border-frame {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .border-frame svg { width: 100%; height: 100%; }
+
+  /* ── CORNER ORNAMENTS ─────────────────────────────────────── */
+  .corners {
+    position: absolute;
+    inset: 32px;
+    pointer-events: none;
+    opacity: 0;
+    animation: fadeIn 1.5s 0.8s forwards;
+  }
+  .corner {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+  }
+  .corner::before, .corner::after {
+    content: '';
+    position: absolute;
+    background: var(--gold);
+    opacity: 0.5;
+  }
+  .corner::before { width: 100%; height: 1px; top: 0; left: 0; }
+  .corner::after  { width: 1px; height: 100%; top: 0; left: 0; }
+  .corner.tr { top:0; right:0; transform: rotate(90deg); }
+  .corner.bl { bottom:0; left:0; transform: rotate(270deg); }
+  .corner.br { bottom:0; right:0; transform: rotate(180deg); }
+
+  /* ── LOGO MARK ────────────────────────────────────────────── */
+  .logo-wrap {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .logo-mark {
+    width: 96px;
+    height: 96px;
+    opacity: 0;
+    transform: scale(0.6) translateY(20px);
+    animation: logoReveal 1.2s cubic-bezier(0.16,1,0.3,1) 0.4s forwards;
+  }
+  @keyframes logoReveal {
+    to { opacity:1; transform:scale(1) translateY(0); }
+  }
+
+  /* ── HORIZONTAL RULE ──────────────────────────────────────── */
+  .divider {
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 28px 0 24px;
+    animation: expandLine 1s cubic-bezier(0.16,1,0.3,1) 1.0s forwards;
+  }
+  @keyframes expandLine { to { width: 280px; } }
+
+  /* ── BRAND NAME ───────────────────────────────────────────── */
+  .brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 300;
+    color: var(--cream);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(24px);
+    animation: fadeUp 1.2s cubic-bezier(0.16,1,0.3,1) 0.9s forwards;
+    line-height: 1;
+    position: relative;
+  }
+  .brand-name .accent { color: var(--gold); font-style: italic; }
+
+  /* ── TAGLINE ──────────────────────────────────────────────── */
+  .tagline {
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeUp 1s cubic-bezier(0.16,1,0.3,1) 1.4s forwards;
+    margin-top: 16px;
+  }
+
+  /* ── LOADING BAR ──────────────────────────────────────────── */
+  .loader-wrap {
+    position: absolute;
+    bottom: 72px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    opacity: 0;
+    animation: fadeIn 0.8s 1.6s forwards;
+  }
+  .loader-track {
+    width: 200px;
+    height: 1px;
+    background: rgba(196,149,90,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .loader-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--gold2));
+    width: 0;
+    animation: loadFill 2.2s cubic-bezier(0.4,0,0.2,1) 1.8s forwards;
+  }
+  @keyframes loadFill { to { width: 100%; } }
+  .loader-text {
+    font-size: 9px;
+    letter-spacing: 0.35em;
+    color: var(--muted);
+    text-transform: uppercase;
+    animation: loadTextPulse 1.5s ease-in-out 2s infinite;
+  }
+  @keyframes loadTextPulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+  /* ── GOLD DOTS ANIMATION ──────────────────────────────────── */
+  .dots {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    opacity: 0;
+    animation: fadeIn 0.6s 1.5s forwards;
+  }
+  .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: dotPulse 1.5s ease-in-out infinite;
+  }
+  .dot:nth-child(1) { animation-delay: 0s;    opacity: 0.3; }
+  .dot:nth-child(2) { animation-delay: 0.2s;  opacity: 0.6; }
+  .dot:nth-child(3) { animation-delay: 0.4s;  opacity: 1;   }
+  .dot:nth-child(4) { animation-delay: 0.6s;  opacity: 0.6; }
+  .dot:nth-child(5) { animation-delay: 0.8s;  opacity: 0.3; }
+  @keyframes dotPulse { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(2)} }
+
+  /* ── EXIT ANIMATION ───────────────────────────────────────── */
+  #splash.exit {
+    animation: splashExit 1s cubic-bezier(0.76,0,0.24,1) forwards;
+  }
+  @keyframes splashExit {
+    0%  { opacity:1; transform:scale(1); }
+    60% { opacity:1; transform:scale(1.03); }
+    100%{ opacity:0; transform:scale(1.06); pointer-events:none; }
+  }
+
+  /* ── MAIN APP (hidden until splash exits) ─────────────────── */
+  #app {
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  #app.visible { opacity: 1; }
+
+  /* ── UTILS ────────────────────────────────────────────────── */
+  @keyframes fadeIn  { to { opacity:1; } }
+  @keyframes fadeUp  { to { opacity:1; transform:translateY(0); } }
+
+  /* ── HORIZONTAL SCAN LINE ─────────────────────────────────── */
+  .scanline {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(196,149,90,0.15), rgba(196,149,90,0.4), rgba(196,149,90,0.15), transparent);
+    top: -2px;
+    animation: scan 3s ease-in-out 1s infinite;
+    pointer-events: none;
+  }
+  @keyframes scan { 0%{top:-2px;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:100%;opacity:0} }
+
+  /* ── SUBTLE GEOMETRIC RINGS ───────────────────────────────── */
+  .ring {
+    position: absolute;
+    border: 1px solid rgba(196,149,90,0.06);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    animation: ringExpand 4s ease-out infinite;
+  }
+  .ring:nth-child(1) { width:300px; height:300px; animation-delay:0s; }
+  .ring:nth-child(2) { width:500px; height:500px; animation-delay:0.8s; }
+  .ring:nth-child(3) { width:700px; height:700px; animation-delay:1.6s; }
+  @keyframes ringExpand {
+    0%  { transform:translate(-50%,-50%) scale(0.8); opacity:0; }
+    20% { opacity:1; }
+    100%{ transform:translate(-50%,-50%) scale(1.2); opacity:0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  SPLASH SCREEN                                              -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="splash">
+
+  <!-- Atmospheric rings -->
+  <div class="ring"></div>
+  <div class="ring"></div>
+  <div class="ring"></div>
+
+  <!-- Glow blobs -->
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="glow glow-3"></div>
+
+  <!-- Scan line sweep -->
+  <div class="scanline"></div>
+
+  <!-- Corner ornaments -->
+  <div class="corners">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+  </div>
+
+  <!-- Particle canvas -->
+  <canvas id="canvas"></canvas>
+
+  <!-- CENTER CONTENT -->
+  <div class="logo-wrap">
+    <!-- SVG Logo mark -->
+    <svg class="logo-mark" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Outer gold rounded square -->
+      <rect x="4" y="4" width="88" height="88" rx="10" fill="#C4955A"/>
+      <!-- Inner 2x2 grid -->
+      <rect x="14" y="14" width="28" height="28" rx="4" fill="#1A1512" opacity="0.92"/>
+      <rect x="54" y="14" width="28" height="28" rx="4" fill="#1A1512" opacity="0.60"/>
+      <rect x="14" y="54" width="28" height="28" rx="4" fill="#1A1512" opacity="0.60"/>
+      <rect x="54" y="54" width="28" height="28" rx="4" fill="#1A1512" opacity="0.92"/>
+      <!-- Center connector dots -->
+      <circle cx="48" cy="48" r="2.5" fill="#C4955A" opacity="0.6"/>
+    </svg>
+
+    <!-- Brand name -->
+    <div class="brand-name">
+      Lumi<span class="accent">è</span>re
+    </div>
+
+    <!-- Tagline -->
+    <p class="tagline">Furniture for real living</p>
+
+    <!-- Divider -->
+    <div class="divider"></div>
+
+    <!-- Animated dots -->
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- Loading bar -->
+  <div class="loader-wrap">
+    <div class="loader-track">
+      <div class="loader-fill"></div>
+    </div>
+    <p class="loader-text">Loading your collection</p>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  YOUR MAIN APP goes here — replace this placeholder         -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="app">
+  <!-- <script src="main.js"></script>  or your React root etc. -->
+  <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#1A1512;color:#C4955A;font-family:'Outfit',sans-serif;font-size:14px;letter-spacing:3px;text-transform:uppercase;">
+    Main App Loads Here
+  </div>
+</div>
+
+<script>
+// ── Particle system ───────────────────────────────────────────
+const canvas  = document.getElementById('canvas');
+const ctx     = canvas.getContext('2d');
+let particles = [];
+let W, H;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+function Particle() {
+  this.x     = Math.random() * W;
+  this.y     = Math.random() * H;
+  this.size  = Math.random() * 1.5 + 0.3;
+  this.speedX = (Math.random() - 0.5) * 0.3;
+  this.speedY = -Math.random() * 0.5 - 0.1;
+  this.life  = Math.random();
+  this.maxLife = Math.random() * 0.6 + 0.4;
+  this.alpha = 0;
+}
+
+Particle.prototype.update = function() {
+  this.x    += this.speedX;
+  this.y    += this.speedY;
+  this.life += 0.004;
+  const t    = this.life / this.maxLife;
+  this.alpha = t < 0.3 ? t/0.3 : t > 0.7 ? (1-t)/0.3 : 1;
+  if (this.life >= this.maxLife || this.y < -10) {
+    this.x    = Math.random() * W;
+    this.y    = H + 10;
+    this.life = 0;
+    this.maxLife = Math.random() * 0.6 + 0.4;
+  }
+};
+
+Particle.prototype.draw = function() {
+  ctx.save();
+  ctx.globalAlpha = this.alpha * 0.55;
+  ctx.fillStyle   = '#C4955A';
+  ctx.shadowBlur  = 4;
+  ctx.shadowColor = '#C4955A';
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+};
+
+for (let i = 0; i < 80; i++) {
+  const p = new Particle();
+  p.y    = Math.random() * H;  // start spread
+  p.life = Math.random() * p.maxLife;
+  particles.push(p);
+}
+
+function animate() {
+  ctx.clearRect(0, 0, W, H);
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ── Auto-dismiss splash after 4 seconds ──────────────────────
+let dismissed = false;
+function dismissSplash() {
+  if (dismissed) return;
+  dismissed = true;
+  const splash = document.getElementById('splash');
+  const app    = document.getElementById('app');
+  splash.classList.add('exit');
+  setTimeout(() => {
+    splash.style.display = 'none';
+    app.classList.add('visible');
+  }, 1000);
+}
+
+// Dismiss after loading bar completes (~4s total)
+setTimeout(dismissSplash, 4200);
+
+// Also allow clicking to skip
+document.getElementById('splash').addEventListener('click', dismissSplash);
+</script>
+</body>
+</html>
