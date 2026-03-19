@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+lumiere-mobile/node_modules/
+Web/node_modules/
+
+# build output
+dist/
+build/
+Web/dist/
+.expo/
+
+# env files
+.env
+.env.local
+.env.production
+
+# logs
+*.log
+doctor.log
+
+# OS
+.DS_Store
+Thumbs.db
